@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 
 #define MSGNR 0
-void dostuff(int,int);
+void msgHandler(int,int);
 void error(const char *msg)
 {
     perror(msg);
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
      char buffer[256];
      struct sockaddr_in serv_addr, cli_addr;
      int n;
-     int cntr = 0;
+     int cntr = MSGNR;
      if (argc < 2) {
          fprintf(stderr,"ERROR, no port provided\n");
          exit(1);
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
          if (pid == 0)  {
              close(sockfd);
              cntr++;
-             dostuff(newsockfd,cntr);
+             msgHandler(newsockfd,cntr);
              exit(0);
          }
          else close(newsockfd);
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
      close(sockfd);
      return 0;
 }
-void dostuff (int sock,int msg_nr)
+void msgHandler (int sock,int msg_nr)
 {
     int n;
     char buffer[256];
