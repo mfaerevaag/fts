@@ -1,0 +1,25 @@
+SSRC = $(subst client.c,,$(wildcard *.c))
+SOBJ = $(patsubst %.c, ../$(ODIR)/%.o, $(SSRC))
+CSRC = $(subst server.c,,$(wildcard *.c))
+COBJ = $(patsubst %.c, ../$(ODIR)/%.o, $(CSRC))
+
+ifdef DEBUG
+	CFLAGS += -g -DDEBUG
+else
+	CFLAGS += -O3
+endif
+
+.PHONY: all build
+
+all: build
+
+../$(ODIR)/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+../$(STARGET): $(SOBJ)
+	$(CC) $(CFLAGS) -o $@ $^
+
+../$(CTARGET): $(COBJ)
+	$(CC) $(CFLAGS) -o $@ $^
+
+build: ../$(STARGET) ../$(CTARGET)
