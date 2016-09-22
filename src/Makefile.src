@@ -1,7 +1,7 @@
-SSRC = $(subst client.c,,$(wildcard *.c))
+SSRC = $(wildcard server/*.c)
 SOBJ = $(patsubst %.c, ../$(ODIR)/%.o, $(SSRC))
-CSRC = $(subst server.c,,$(wildcard *.c))
-COBJ = $(patsubst %.c, ../$(ODIR)/%.o, $(CSRC))
+CSRC = $(wildcard client/*.c)
+COBJ = $(patsubst client/%.c, ../$(ODIR)/client/%.o, $(CSRC))
 
 ifdef DEBUG
 	CFLAGS += -g -DDEBUG
@@ -9,17 +9,27 @@ else
 	CFLAGS += -O3
 endif
 
-.PHONY: all build
+.PHONY: all build asdf
 
 all: build
 
-../$(ODIR)/%.o: %.c
+../$(ODIR)/server:
+	mkdir $@
+
+../$(ODIR)/client:
+	mkdir $@
+
+../$(ODIR)/server/%.o: server/%.c
+	$(CC) $(CFLAGS) -I./server/ -c $< -o $@
+
+../$(ODIR)/client/%.o: client/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-../$(STARGET): $(SOBJ)
+../$(ODIR)/$(STARGET): $(SOBJ)
+	$(CC) $(CFLAGS) -I./server/ -o $@ $^
+
+../$(ODIR)/$(CTARGET): $(COBJ)
 	$(CC) $(CFLAGS) -o $@ $^
 
-../$(CTARGET): $(COBJ)
-	$(CC) $(CFLAGS) -o $@ $^
-
-build: ../$(STARGET) ../$(CTARGET)
+build: ../$(ODIR)/server ../$(ODIR)/client
+build: ../$(ODIR)/$(STARGET) ../$(ODIR)/$(CTARGET)

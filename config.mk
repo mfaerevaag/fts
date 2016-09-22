@@ -9,8 +9,6 @@ prefix ?= /usr
 
 SDIR = src
 ODIR = bin
-SRC  = $(wildcard $(SDIR)/*.c)
-OBJ  = $(patsubst $(SDIR)/%.c, $(ODIR)/%.o, $(SRC))
 
-STARGET ?= $(ODIR)/server
-CTARGET ?= $(ODIR)/client
+STARGET ?= serv
+CTARGET ?= cli

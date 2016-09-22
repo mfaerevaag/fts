@@ -5,11 +5,10 @@ export
 
 all: clean build
 
-
 # src
 
 $(ODIR):
-	mkdir -p $(ODIR)
+	mkdir $@
 
 build: $(ODIR)
 build:
@@ -20,12 +19,6 @@ debug: build
 
 
 # misc
-
-run-server:
-	$(STARGET)
-
-run-client:
-	$(CTARGET)
 
 clean:
 	rm -rf $(ODIR)/*
