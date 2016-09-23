@@ -60,26 +60,27 @@ void handle_data(int slot)
 
         log_infof("slot %d sent '%s'\n", slot, buffer);
 
-        /* TODO return */
+        /* check if quit */
+        if (strcmp(buffer, "/quit") == 0) {
+            log_infof("slot %d quit\n", slot);
+            close(u->sock);
+            free(u);
+            socks[slot] = NULL;
+            return;
+        }
+
+        /* run command */
         cmd_handle(buffer, slot, socks);
 
-        /* sprintf(buffer, "todo"); */
-        /* int n = send(nsd, buffer, BUF_SIZE, 0); */
-        /* if (n < 0) { */
-        /*     printf("ERROR: on responding\n"); */
-        /* } */
+        /* reply, if any */
+        if (strcmp(buffer, "") != 0) {
+            log_infof("replying '%s'\n", buffer);
 
-        /* /\* unless buffer is empty *\/ */
-        /* if (strcmp(buffer, "<EMPTY>") != 0) { */
-        /*     n = send(nsd, buffer, BUF_SIZE, 0); */
-        /*     if (n < 0) { */
-        /*         printf("ERROR: on responding\n"); */
-        /*     } */
-        /* } */
-
-        /* if (strcmp(cmd->chain[0], "/quit") == 0 && */
-        /*     strcmp(buffer, "<QUIT>") == 0) */
-        /*     close(cmd->nsd); */
+            int n = send(u->sock, buffer, BUF_SIZE, 0);
+            if (n < 0) {
+                printf("ERROR: on responding\n");
+            }
+        }
     }
 }
 
@@ -117,7 +118,8 @@ void stop()
     sprintf(buffer, "/quit");
 
     for (int i = 0; i < MAX_CONN; i++) {
-        if (socks[i] != 0) {
+        if (socks[i] != NULL) {
+            printf("FREE: slot %i ptr %p\n", i, (void *) socks[i]); // TODO
             int n = send(socks[i]->sock, buffer, strlen(buffer) + 1, 0);
             if (n < 0)
                 perror("ERROR on quit");
