@@ -1,7 +1,8 @@
 #include "command.h"
 
 char *cmd_nick(command *cmd, user **socks);
-char *cmd_broadcast(command *cmd, user **socks);
+char *cmd_all(command *cmd, user **socks);
+char *cmd_list(command *cmd, user **socks);
 
 command *cmd_decode(command *cmd, char buffer[BUF_SIZE])
 {
@@ -43,14 +44,12 @@ command *cmd_decode(command *cmd, char buffer[BUF_SIZE])
     return cmd;
 }
 
-void cmd_handle(char buffer[BUF_SIZE], int slot, user **socks)
+void cmd_handle(char *buffer, int slot, user **socks)
 {
     /* decode */
     command cmd;
     cmd_decode(&cmd, buffer);
     cmd.slot = slot;
-
-    user *u = socks[slot];
 
     memset(buffer, 0, BUF_SIZE);
 
@@ -59,20 +58,15 @@ void cmd_handle(char buffer[BUF_SIZE], int slot, user **socks)
             sprintf(buffer, "%s", cmd_nick(&cmd, socks));
 
         } else if (strcmp(cmd.chain[0], "/all") == 0) {
-            sprintf(buffer, "%s", cmd_broadcast(&cmd, socks));
+            sprintf(buffer, "%s", cmd_all(&cmd, socks));
 
-        } else if (strcmp(cmd.chain[0], "/quit") == 0) {
-            log_infof("slot %d quit\n", slot);
-            free(socks[slot]);
+        } else if (strcmp(cmd.chain[0], "/list") == 0) {
+            sprintf(buffer, "%s", cmd_list(&cmd, socks));
 
         } else {
             log_warn("unknown command");
             sprintf(buffer, "unknown command");
         }
-
-        int n = send(u->sock, buffer, BUF_SIZE, 0);
-        if (n < 0)
-            perror("ERROR on responding");
     }
 }
 
@@ -90,7 +84,28 @@ char *cmd_nick(command *cmd, user **socks)
     return "changed nick";
 }
 
-char *cmd_broadcast(command *cmd, user **socks)
+char *cmd_list(command *cmd, user **socks)
+{
+    /* check args */
+    if (cmd->len > 1) {
+        return "usage: /list";
+    }
+
+    char *buffer = calloc(BUF_SIZE, sizeof(char));
+
+    int j = 0;
+    for (int i = 0; i < MAX_CONN; i++) {
+        if (socks[i] != NULL) {
+            sprintf(buffer, "%s%s\n", buffer, socks[i]->nick);
+            j++;
+        }
+    }
+    sprintf(buffer, "%s\ntotal %d users", buffer, j);
+
+    return buffer;
+}
+
+char *cmd_all(command *cmd, user **socks)
 {
     /* check args */
     if (cmd->len < 2) {
