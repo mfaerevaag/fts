@@ -7,7 +7,7 @@ void sock_unblock(int sock);
 void sock_listen();
 
 int sd;
-int conn_list[MAX_CONN];
+int socks[MAX_CONN];
 fd_set set_sockets;
 int highsock;
 
@@ -16,73 +16,69 @@ void handle_new_conn()
 {
     int nsd = accept(sd, NULL, NULL);
     if (nsd < 0) {
-        perror("ERROR: on accept");
+        perror("ERROR on accept");
     }
 
     sock_unblock(nsd);
 
     int i, n;
     for (i = 0; (i < MAX_CONN) && (nsd != -1); i ++)
-        if (conn_list[i] == 0) {
-            printf("INFO: accepted connection fd=%d slot=%d\n", nsd, i);
-            conn_list[i] = nsd;
+        if (socks[i] == 0) {
+            log_infof("slot %d connected\n", i);
+            socks[i] = nsd;
             nsd = -1;
         }
 
     if (nsd != -1) {
         char msg[] = "sorry, server full";
-        printf("ERROR: %s\n", msg);
+        log_warn("conn rejected, server full");
 
         n = send(nsd, msg, ((int) strlen(msg) + 1), 0);
         if (n < 0) {
-            printf("ERROR: failed to notify full server\n");
+            log_err("failed to notify full server");
         }
 
         close(nsd);
     }
 }
 
-void handle_data(int pos)
+void handle_data(int slot)
 {
     char buffer[BUF_SIZE];
-    int n;
-    int nsd = conn_list[pos];
+    int nsd = socks[slot];
 
-    printf("INFO: handling data fd=%d pos=%d\n", nsd, pos);
-
-    n = recv(nsd, buffer, BUF_SIZE, 0);
+    int n = recv(nsd, buffer, BUF_SIZE, 0);
     if (n < 0) {
-        printf("ERROR: on receive\n");
+        log_warn("on receive, closing socket");
         close(nsd);
-        conn_list[pos] = 0;
+        socks[slot] = 0;
 
     } else {
         /* remove trailing new line */
         buffer[strcspn(buffer, "\n")] = 0;
 
-        printf("INFO: chain received '%s'\n", buffer);
+        log_infof("slot %d sent '%s'\n", slot, buffer);
 
-        command *cmd = cmd_decode(buffer);
-        cmd->nsd = nsd;
+        /* TODO return */
+        cmd_handle(buffer, slot, socks);
 
-        printf("INFO: cmd '%s'\n", cmd->chain[0]);
+        /* sprintf(buffer, "todo"); */
+        /* int n = send(nsd, buffer, BUF_SIZE, 0); */
+        /* if (n < 0) { */
+        /*     printf("ERROR: on responding\n"); */
+        /* } */
 
-        sprintf(buffer, "%s", cmd_handle(cmd));
+        /* /\* unless buffer is empty *\/ */
+        /* if (strcmp(buffer, "<EMPTY>") != 0) { */
+        /*     n = send(nsd, buffer, BUF_SIZE, 0); */
+        /*     if (n < 0) { */
+        /*         printf("ERROR: on responding\n"); */
+        /*     } */
+        /* } */
 
-        /* unless buffer is empty */
-        if (strcmp(buffer, "<EMPTY>") != 0) {
-            n = send(nsd, buffer, BUF_SIZE, 0);
-            if (n < 0) {
-                printf("ERROR: on responding\n");
-            }
-            printf("RESPONSE: %s\n", buffer);
-        }
-
-        if (strcmp(cmd->chain[0], "/quit") == 0 &&
-            strcmp(buffer, "<QUIT>") == 0)
-            close(cmd->nsd);
-
-        free(cmd);
+        /* if (strcmp(cmd->chain[0], "/quit") == 0 && */
+        /*     strcmp(buffer, "<QUIT>") == 0) */
+        /*     close(cmd->nsd); */
     }
 }
 
@@ -91,12 +87,12 @@ void sock_unblock(int sock)
     int opts = fcntl(sock,F_GETFL);
 
     if (opts < 0) {
-        perror("ERROR: fcntl(F_GETFL)");
+        perror("ERROR fcntl(F_GETFL)");
 
     } else {
         opts = (opts | O_NONBLOCK);
         if (fcntl(sock,F_SETFL,opts) < 0)
-            perror("ERROR: fcntl(F_SETFL)");
+            perror("ERROR fcntl(F_SETFL)");
     }
 }
 
@@ -104,24 +100,30 @@ void sock_listen() {
     if (FD_ISSET(sd, &set_sockets))
         handle_new_conn();
 
-    int i;
-    for (i = 0; i < MAX_CONN; i++) {
-        if (FD_ISSET(conn_list[i], &set_sockets))
+    for (int i = 0; i < MAX_CONN; i++) {
+        if (FD_ISSET(socks[i], &set_sockets))
             handle_data(i);
     }
 }
 
 void stop()
 {
-    printf("stoping server...\n");
+    log_info("stopping server...");
 
-    int i;
-    for (i = 0; i < MAX_CONN; i++) {
-        if (conn_list[i] != 0)
-            close(conn_list[i]);
+    char buffer[BUF_SIZE];
+    sprintf(buffer, "/quit");
+
+    for (int i = 0; i < MAX_CONN; i++) {
+        if (socks[i] != 0) {
+            int n = send(socks[i], buffer, strlen(buffer) + 1, 0);
+            if (n < 0)
+                perror("ERROR on quit");
+
+            close(socks[i]);
+        }
     }
 
-    close (sd);
+    close(sd);
 }
 
 void start(int port)
@@ -132,29 +134,29 @@ void start(int port)
 
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if (sd < 0) {
-        perror("ERROR: socket");
+        perror("ERROR socket");
         exit(EXIT_FAILURE);
     }
 
     int reuse_addr = 1;
     setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
 
-    sock_unblock (sd);
+    sock_unblock(sd);
 
     server_address.sin_family      = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
     server_address.sin_port        = htons(port);
 
     if (bind(sd, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
-        perror("ERROR: on bind\n");
+        perror("ERROR on bind");
         close(sd);
         exit(EXIT_FAILURE);
     }
 
     highsock = sd;
-    memset((char *) &conn_list, 0, sizeof(conn_list));
+    memset((char *) &socks, 0, sizeof(socks));
 
-    printf("listening...\n");
+    log_info("listening...");
     listen(sd, MAX_CONN);
 
     while (1) {
@@ -162,24 +164,22 @@ void start(int port)
         FD_ZERO(&set_sockets);
         FD_SET(sd, &set_sockets);
 
-        int i;
-        for (i = 0; i < MAX_CONN; i++) {
-            if (conn_list[i] != 0) {
-                FD_SET(conn_list[i], &set_sockets);
-                if (conn_list[i] > highsock)
-                    highsock = conn_list[i];
+        for (int i = 0; i < MAX_CONN; i++) {
+            if (socks[i] != 0) {
+                FD_SET(socks[i], &set_sockets);
+                if (socks[i] > highsock)
+                    highsock = socks[i];
             }
         }
 
         timeout.tv_sec = 3;
         timeout.tv_usec = 0;
 
-        nbr_sockets_lus = select(highsock+1, &set_sockets, NULL, NULL, &timeout);
+        nbr_sockets_lus = select(highsock + 1, &set_sockets, NULL, NULL, &timeout);
 
         if (nbr_sockets_lus < 0) {
-            perror("ERROR: on select");
+            perror("ERROR on select");
             break;
-
         } else if (nbr_sockets_lus == 0) {
             fflush(stdout);
         } else {

@@ -1,6 +1,7 @@
 #include "command.h"
 
 char *cmd_nick(command *cmd);
+char *cmd_broadcast(command *cmd, int clients[MAX_CONN]);
 
 command *cmd_decode(char buffer[BUF_SIZE])
 {
@@ -43,29 +44,63 @@ command *cmd_decode(char buffer[BUF_SIZE])
     return cmd;
 }
 
-char *cmd_handle(command *cmd)
+void cmd_handle(char buffer[BUF_SIZE], int slot, int clients[MAX_CONN])
 {
+    /* decode */
+    command *cmd = cmd_decode(buffer);
+    cmd->nsd = clients[slot];
+
+    memset(buffer, 0, BUF_SIZE);
+
     if (strcmp(cmd->chain[0], "/nick") == 0) {
-        return cmd_nick(cmd);
+        sprintf(buffer, "%s", cmd_nick(cmd));
+
+    } else if (strcmp(cmd->chain[0], "/all") == 0) {
+        sprintf(buffer, "%s", cmd_broadcast(cmd, clients));
+
+    } else if (strcmp(cmd->chain[0], "/quit") == 0) {
+        log_infof("slot %d quit\n", slot);
+        clients[slot] = 0;
+
     } else {
-        return "unknown command";
+        log_warn("unknown command");
+        sprintf(buffer, "unknown command");
     }
 
-    return NULL;
+    int n = send(cmd->nsd, buffer, BUF_SIZE, 0);
+    if (n < 0)
+        perror("ERROR on responding");
+
+    free(cmd); // TODO: stack
 }
 
 char *cmd_nick(command *cmd)
 {
     /* check args */
     if (cmd->len != 2) {
-        return "WARNING: usage: /nick <name>";
+        return "usage: /nick <name>";
     }
 
-    /* if(list_clients(cmd.chain[1])) */
-    /*     return "WARNING: nick taken"; */
-
-    /* client c = new_client(cmd.chain[1], cmd.nsd); */
-    /* list_clients(c); */
-
     return "TODO: /nick";
+}
+
+char *cmd_broadcast(command *cmd, int clients[MAX_CONN])
+{
+    /* check args */
+    if (cmd->len != 2) {
+        return "usage: /all <msg>";
+    }
+
+    char buffer[BUF_SIZE];
+    sprintf(buffer, "%s: %s", "todo yournick", cmd->chain[1]);
+
+    for (int i = 0; i < MAX_CONN; i++) {
+        if (clients[i] != 0 && i != cmd->nsd) {
+            int n = send(clients[i], buffer, BUF_SIZE, 0);
+            if (n < 0)
+                perror("ERROR on responding");
+        }
+    }
+
+    return "";
 }

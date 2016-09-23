@@ -12,3 +12,5 @@ ODIR = bin
 
 STARGET ?= serv
 CTARGET ?= cli
+
+LIBS = -lpthread

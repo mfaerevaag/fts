@@ -29,7 +29,7 @@ all: build
 	$(CC) $(CFLAGS) -I./server/ -o $@ $^
 
 ../$(ODIR)/$(CTARGET): $(COBJ)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $^
 
 build: ../$(ODIR)/server ../$(ODIR)/client
 build: ../$(ODIR)/$(STARGET) ../$(ODIR)/$(CTARGET)
