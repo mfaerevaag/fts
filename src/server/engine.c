@@ -1,15 +1,15 @@
 #include "engine.h"
 
 void handle_new_conn();
-void handle_data(int pos);
+void handle_data(int slot);
 
 void sock_unblock(int sock);
 void sock_listen();
 
 int sd;
-int socks[MAX_CONN];
-fd_set set_sockets;
+user **socks;
 int highsock;
+fd_set set_sockets;
 
 
 void handle_new_conn()
@@ -21,19 +21,20 @@ void handle_new_conn()
 
     sock_unblock(nsd);
 
-    int i, n;
-    for (i = 0; (i < MAX_CONN) && (nsd != -1); i ++)
-        if (socks[i] == 0) {
+    for (int i = 0; (i < MAX_CONN) && (nsd != -1); i ++) {
+        if (socks[i] == NULL) {
             log_infof("slot %d connected\n", i);
-            socks[i] = nsd;
+
+            socks[i] = user_create(nsd);
             nsd = -1;
         }
+    }
 
     if (nsd != -1) {
         char msg[] = "sorry, server full";
         log_warn("conn rejected, server full");
 
-        n = send(nsd, msg, ((int) strlen(msg) + 1), 0);
+        int n = send(nsd, msg, ((int) strlen(msg) + 1), 0);
         if (n < 0) {
             log_err("failed to notify full server");
         }
@@ -45,12 +46,12 @@ void handle_new_conn()
 void handle_data(int slot)
 {
     char buffer[BUF_SIZE];
-    int nsd = socks[slot];
+    user *u = socks[slot];
 
-    int n = recv(nsd, buffer, BUF_SIZE, 0);
+    int n = recv(u->sock, buffer, BUF_SIZE, 0);
     if (n < 0) {
         log_warn("on receive, closing socket");
-        close(nsd);
+        close(u->sock);
         socks[slot] = 0;
 
     } else {
@@ -96,13 +97,15 @@ void sock_unblock(int sock)
     }
 }
 
-void sock_listen() {
+void sock_listen()
+{
     if (FD_ISSET(sd, &set_sockets))
         handle_new_conn();
 
     for (int i = 0; i < MAX_CONN; i++) {
-        if (FD_ISSET(socks[i], &set_sockets))
-            handle_data(i);
+        if (socks[i] != NULL)
+            if (FD_ISSET(socks[i]->sock, &set_sockets))
+                handle_data(i);
     }
 }
 
@@ -115,14 +118,16 @@ void stop()
 
     for (int i = 0; i < MAX_CONN; i++) {
         if (socks[i] != 0) {
-            int n = send(socks[i], buffer, strlen(buffer) + 1, 0);
+            int n = send(socks[i]->sock, buffer, strlen(buffer) + 1, 0);
             if (n < 0)
                 perror("ERROR on quit");
 
-            close(socks[i]);
+            close(socks[i]->sock);
+            free(socks[i]);
         }
     }
 
+    free(socks);
     close(sd);
 }
 
@@ -131,6 +136,8 @@ void start(int port)
     struct sockaddr_in server_address;
     struct timeval timeout;
     int nbr_sockets_lus;
+
+    socks = malloc(MAX_CONN * sizeof(user *));
 
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if (sd < 0) {
@@ -154,7 +161,6 @@ void start(int port)
     }
 
     highsock = sd;
-    memset((char *) &socks, 0, sizeof(socks));
 
     log_info("listening...");
     listen(sd, MAX_CONN);
@@ -165,10 +171,10 @@ void start(int port)
         FD_SET(sd, &set_sockets);
 
         for (int i = 0; i < MAX_CONN; i++) {
-            if (socks[i] != 0) {
-                FD_SET(socks[i], &set_sockets);
-                if (socks[i] > highsock)
-                    highsock = socks[i];
+            if (socks[i] != NULL) {
+                FD_SET(socks[i]->sock, &set_sockets);
+                if (socks[i]->sock > highsock)
+                    highsock = socks[i]->sock;
             }
         }
 

@@ -17,6 +17,7 @@
 #include "config.h"
 #include "logger.h"
 #include "command.h"
+#include "user.h"
 
 void start(int port);
 void stop();

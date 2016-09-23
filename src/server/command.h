@@ -10,15 +10,16 @@
 
 #include "config.h"
 #include "logger.h"
+#include "user.h"
 
 struct command_t {
     char **chain;
     int len;
-    int nsd;
+    int slot;
 };
 typedef struct command_t command;
 
 command *cmd_decode(command *cmd, char buffer[BUF_SIZE]);
-void cmd_handle(char buffer[BUF_SIZE], int slot, int clients[MAX_CONN]);
+void cmd_handle(char buffer[BUF_SIZE], int slot, user **socks);
 
 #endif
