@@ -18,7 +18,7 @@ struct command_t {
 };
 typedef struct command_t command;
 
-command *cmd_decode(char *buffer);
+command *cmd_decode(command *cmd, char buffer[BUF_SIZE]);
 void cmd_handle(char buffer[BUF_SIZE], int slot, int clients[MAX_CONN]);
 
 #endif
