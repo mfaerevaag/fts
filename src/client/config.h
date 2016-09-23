@@ -3,6 +3,6 @@
 
 #define BUF_SIZE 512
 
-#define PROMPT "> "
+#define PROMPT " > "
 
 #endif

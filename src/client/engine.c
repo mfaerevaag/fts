@@ -1,9 +1,8 @@
 #include "engine.h"
 
 int sd;
-int identified;
-pthread_t pt;
 
+pthread_t thread_listen;
 
 void *sock_listen (void *sock)
 {
@@ -17,8 +16,11 @@ void *sock_listen (void *sock)
             break;
         }
 
-        if (n > 0)
-            printf("\r%s\n%s", buffer, PROMPT);
+        if (n > 0){
+            printf("\r%s\n", buffer);
+            printf("\r%s", PROMPT);
+            fflush(stdout);
+        }
 
         if (strcmp(buffer, "/quit") == 0) {
             stop();
@@ -26,6 +28,7 @@ void *sock_listen (void *sock)
         }
     }
 
+    pthread_exit(NULL);
     return NULL;
 }
 
@@ -78,12 +81,12 @@ void start(char *host, int port)
 
     printf("connected\n");
 
-    pthread_create(&pt, NULL, sock_listen, &sd);
-
-    identified = 0; // TODO
+    pthread_create(&thread_listen, NULL, sock_listen, &sd);
 
     while (1) {
         printf("\r%s", PROMPT);
+        fflush(stdout);
+
         memset(buffer, 0, BUF_SIZE);
         fgets(buffer, BUF_SIZE - 1, stdin);
 

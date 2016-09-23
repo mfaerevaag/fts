@@ -52,24 +52,26 @@ void cmd_handle(char buffer[BUF_SIZE], int slot, int clients[MAX_CONN])
 
     memset(buffer, 0, BUF_SIZE);
 
-    if (strcmp(cmd->chain[0], "/nick") == 0) {
-        sprintf(buffer, "%s", cmd_nick(cmd));
+    if (cmd->chain[0] != NULL) {
+        if (strcmp(cmd->chain[0], "/nick") == 0) {
+            sprintf(buffer, "%s", cmd_nick(cmd));
 
-    } else if (strcmp(cmd->chain[0], "/all") == 0) {
-        sprintf(buffer, "%s", cmd_broadcast(cmd, clients));
+        } else if (strcmp(cmd->chain[0], "/all") == 0) {
+            sprintf(buffer, "%s", cmd_broadcast(cmd, clients));
 
-    } else if (strcmp(cmd->chain[0], "/quit") == 0) {
-        log_infof("slot %d quit\n", slot);
-        clients[slot] = 0;
+        } else if (strcmp(cmd->chain[0], "/quit") == 0) {
+            log_infof("slot %d quit\n", slot);
+            clients[slot] = 0;
 
-    } else {
-        log_warn("unknown command");
-        sprintf(buffer, "unknown command");
+        } else {
+            log_warn("unknown command");
+            sprintf(buffer, "unknown command");
+        }
+
+        int n = send(cmd->nsd, buffer, BUF_SIZE, 0);
+        if (n < 0)
+            perror("ERROR on responding");
     }
-
-    int n = send(cmd->nsd, buffer, BUF_SIZE, 0);
-    if (n < 0)
-        perror("ERROR on responding");
 
     free(cmd); // TODO: stack
 }
