@@ -1,0 +1,80 @@
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "report"
+%%% End:
+
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage[many]{tcolorbox}
+
+% generalized stuff
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\term}[1]{\textit{#1}}
+\newcommand{\instr}[1]{\textit{#1}}
+
+% colors
+\definecolor{Brown}{cmyk}{0,0.81,1,0.60}
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{CadetBlue}{cmyk}{0.62,0.57,0.23,0}
+\definecolor{lightlightgray}{gray}{0.95}
+\definecolor{lightgray}{gray}{0.85}
+\definecolor{sh_comment}{rgb}{0.12, 0.38, 0.18}
+\definecolor{sh_keyword}{rgb}{0.37, 0.38, 0.75}
+\definecolor{sh_string}{rgb}{0.06, 0.10, 0.98}
+
+% listings
+\lstset{
+  basicstyle=\small\ttfamily,
+  stringstyle=\color{sh_string},
+  keywordstyle = \color{sh_keyword}\bfseries,
+  commentstyle=\color{sh_comment},
+  backgroundcolor=\color{lightlightgray},
+  frame=single,
+  rulecolor=\color{lightgray},
+  framesep=3pt,
+  numbersep=5pt,
+  xleftmargin=10pt,
+  xrightmargin=0pt,
+  showspaces=false,
+  showstringspaces=false,
+  tabsize=4,
+  aboveskip=15pt,
+  belowskip=5pt,
+  lineskip=2pt,
+  captionpos=b,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=100pt,
+  breaklines,
+  numbersep=5pt,
+  breakatwhitespace=false,
+  showspaces=false,
+  showtabs=false,
+  escapeinside={(*@}{@*)}
+}
+
+\lstnewenvironment{ccode}[1][]
+ {\lstset{language={[ANSI]C},#1}}
+ {}
+
+% Remark box
+\newtcolorbox{remark}[1][]{
+  breakable,
+  title=#1,
+  colback=lightgray,
+  colbacktitle=white,
+  coltitle=black,
+  fonttitle=\bfseries,
+  bottomrule=0pt,
+  toprule=0pt,
+  leftrule=0pt,
+  rightrule=0pt,
+  titlerule=0pt,
+  arc=0pt,
+  outer arc=0pt,
+  colframe=lightgray,
+}
+
+% algorithmic package setup
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}

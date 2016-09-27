@@ -1,0 +1,39 @@
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "report"
+%%% End:
+
+\newcommand*\formatname[2]{
+  \leavevmode
+  \rlap{\textit{#1}}
+  \hspace{0.3\linewidth}
+  \code{#2}}
+
+\begin{titlepage}
+
+\thispagestyle{empty}
+
+\begin{flushright}
+  \includegraphics[width=9cm]{figures/dtu}
+\end{flushright}
+
+\vskip20mm
+\begin{center}
+  \vskip5mm
+  \huge\textbf{\TITLE}
+  \vskip5mm
+  \Large \COURSE
+  \vskip3mm
+  \large \DATE
+\end{center}
+\vfill
+
+\begin{flushleft}
+  \normalsize
+  \formatname{Markus Færevaag}{s123692} \par
+  \formatname{Jonathan Becktor}{s123094} \par
+  \vskip2cm
+  \includegraphics[width=7cm]{figures/dtu-compute}
+\end{flushleft}
+
+\end{titlepage}

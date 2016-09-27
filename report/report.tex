@@ -1,0 +1,120 @@
+\documentclass[11pt]{article}
+
+\usepackage{fullpage}
+\usepackage[utf8]{inputenc}
+\usepackage[american]{babel}
+\usepackage{csquotes}
+\usepackage{listings}
+\usepackage[table]{xcolor}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{parskip}
+\usepackage{abstract}
+\usepackage{url}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{fancybox}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[bottom]{footmisc}
+\usepackage{makecell}
+\usepackage{ifthen}
+\usepackage{listings}
+\usepackage{parcolumns}
+\usepackage{subcaption}
+\usepackage{drawstack}
+\usepackage{pdfpages}
+\usepackage{makecell}
+\usepackage{setspace}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage[backend=biber]{biblatex}
+\bibliography{report}
+
+\setcounter{secnumdepth}{3} % only chapter and sections will be numbered
+\setcounter{tocdepth}{3}    % entries down to \subsubsections in the TOC
+
+% constants
+\newcommand{\COURSE}{02228 Fault-Tolerant Systems}
+\newcommand{\TITLE}{Secret Chat}
+\newcommand{\DATE}{Fall 2016}
+\newcommand{\thename}{TODO Chat}
+
+\addto\captionsamerican{\renewcommand{\contentsname}{Table of Contents}}
+
+\input{macros}
+
+\pagestyle{fancy}
+\fancyhf{}
+\setlength{\parindent}{0pt}
+\setlength{\headheight}{15pt}
+\setlength{\headsep}{25pt}
+\lhead{\TITLE}
+\chead{}
+\rhead{\leftmark}
+\cfoot{Page \thepage{} of~\pageref{LastPage}}
+
+\begin{document}
+\input{title}
+\clearpage
+
+\onehalfspacing{}
+
+\section*{Abstract}
+\label{sec:abstract}
+\input{sections/abstract}
+\clearpage
+
+\tableofcontents
+\clearpage
+
+\section{Introduction}
+\label{sec:intro}
+\input{sections/intro}
+
+\clearpage
+\section{Design}
+\label{sec:design}
+\input{sections/design}
+
+\clearpage
+\section{Implementation}
+\label{sec:impl}
+\subsection{Off-the-Record Messaging (OTR)}
+\subsection{Peer-to-Peer (P2P)}
+
+\clearpage
+\section{Evaluation}
+\label{sec:eval}
+\input{sections/eval}
+
+\clearpage
+\section{Conclusions}
+\label{sec:conclusions}
+\input{sections/conclusion}
+
+\clearpage
+\section{Discussion}
+\label{sec:discussion}
+\input{sections/discussion}
+
+\newpage
+% \nocite{*}
+\printbibliography[heading=bibintoc]
+
+\newpage
+\appendix
+\section{Appendices}
+\label{sec:appendices}
+\input{sections/appendix}
+
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

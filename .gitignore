@@ -2,3 +2,16 @@ bin
 /GPATH
 /GRTAGS
 /GTAGS
+
+/report/auto/
+*.aux
+*.log
+*.out
+*.toc
+*.pdf
+*.bbl
+*.blg
+/report/report-blx.bib
+/report/report.bcf
+/report/report.run.xml
+/report/sections/auto/
